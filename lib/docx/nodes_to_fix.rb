@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Docx
   class NodesToFix
     attr_accessor :node_list, :current_node, :value
@@ -15,7 +17,7 @@ module Docx
       new_node = current_node.nil? || current_node != node
       if new_node
         @current_node = node
-        @node_list << {:node => node, :range => index..index}
+        @node_list << { node: node, range: index..index }
       else
         @node_list.last[:range] = (node_list.last[:range].min)..index
       end
@@ -29,17 +31,34 @@ module Docx
         new_val = node.value
 
         key = obj[:node].to_s[range].gsub('||', '')
-
         if key.start_with?('**') && key.end_with?('**')
+          # the text before bolded tag
           first_part = node.value[0..(range.first - 1)]
           node.parent.parent.parent.add_element(common_element(first_part))
 
+          # bolded tag
           node.parent.parent.parent.add_element(bold_element(value.to_s || ''))
 
+          # the text after the bolded tag
           last_part = node.value.to_s[(range.last + 1)..-1]
           node.parent.parent.parent.add_element(common_element(last_part))
 
           node.parent.delete(node)
+        elsif new_val.include?('**')
+
+          # # bolded tags
+          # bolded_tags = data[:contratada].split('||').select { |a| a.start_with?('**') && a.end_with?('**') }.uniq
+          # bolded_tags.each do |tag|
+          #   cleaned_tag = tag.gsub('**', '')
+          #   next unless ::Document::HIRED_TAGS.include?(cleaned_tag.to_sym)
+
+          #   value = hired.send(cleaned_tag)
+          #   data[cleaned_tag.to_sym] = "<w:r><w:rPr><w:b/><w:bCs/></w:rPr><w:t>#{value}</w:t></w:r>"
+          #   data[:contratada] = data[:contratada]&.gsub(
+          #     "||**#{cleaned_tag}**||",
+          #     "<w:r><w:rPr><w:b/><w:bCs/></w:rPr><w:t>#{value}</w:t></w:r>"
+          #   )
+          # end
         else
           new_val[range] = value.to_s || ''
           node.value = new_val
