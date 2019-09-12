@@ -43,17 +43,16 @@ module Docx
           node.parent.parent.parent.add_element(common_element(last_part))
 
           node.parent.delete(node)
-        elsif value.include?('**')
-
-          splited = value.split('||')
-          splited.each do |token|
-            element =  if token.start_with?('**') && token.end_with?('**')
-                         # come here this way '||**name already changed**||'
-                         token = token&.gsub('||', '')&.gsub('**', '')
-                         bold_element(token.to_s || '')
-                       else
-                         common_element(token)
-                       end
+        elsif value&.include?('**')
+          tokenized_value = value.split('**')
+          tokenized_value.each do |token|
+            element = if token.start_with?('[') && token.end_with?(']')
+                        # come here this way '||**name already changed**||'
+                        token = token&.gsub('[', '')&.gsub(']', '')
+                        bold_element(token.to_s || '')
+                      else
+                        common_element(token)
+                      end
 
             node.parent.parent.parent.add_element(element)
           end
