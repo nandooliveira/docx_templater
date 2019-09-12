@@ -29,7 +29,6 @@ module Docx
         range = obj[:range]
 
         new_val = node.value
-
         key = obj[:node].to_s[range].gsub('||', '')
         if key.start_with?('**') && key.end_with?('**')
           # the text before bolded tag
@@ -44,21 +43,22 @@ module Docx
           node.parent.parent.parent.add_element(common_element(last_part))
 
           node.parent.delete(node)
-        elsif new_val.include?('**')
+        elsif value.include?('**')
 
-          # # bolded tags
-          # bolded_tags = data[:contratada].split('||').select { |a| a.start_with?('**') && a.end_with?('**') }.uniq
-          # bolded_tags.each do |tag|
-          #   cleaned_tag = tag.gsub('**', '')
-          #   next unless ::Document::HIRED_TAGS.include?(cleaned_tag.to_sym)
+          splited = value.split('||')
+          splited.each do |token|
+            element =  if token.start_with?('**') && token.end_with?('**')
+                         # come here this way '||**name already changed**||'
+                         token = token&.gsub('||', '')&.gsub('**', '')
+                         bold_element(token.to_s || '')
+                       else
+                         common_element(token)
+                       end
 
-          #   value = hired.send(cleaned_tag)
-          #   data[cleaned_tag.to_sym] = "<w:r><w:rPr><w:b/><w:bCs/></w:rPr><w:t>#{value}</w:t></w:r>"
-          #   data[:contratada] = data[:contratada]&.gsub(
-          #     "||**#{cleaned_tag}**||",
-          #     "<w:r><w:rPr><w:b/><w:bCs/></w:rPr><w:t>#{value}</w:t></w:r>"
-          #   )
-          # end
+            node.parent.parent.parent.add_element(element)
+          end
+
+          node.parent.delete(node)
         else
           new_val[range] = value.to_s || ''
           node.value = new_val
