@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # require 'zip/zipfilesystem'
 require 'zip'
 require 'htmlentities'
@@ -32,7 +34,7 @@ class DocxTemplater
       end
     end
     # You can save this buffer or send it with rails via send_data
-    return buffer
+    buffer
   end
 
   def generate_tags_for(*args)
@@ -44,6 +46,7 @@ class DocxTemplater
   end
 
   private
+
   attr_reader :options
 
   def get_entry_content(entry, data_provider)
@@ -60,7 +63,7 @@ class DocxTemplater
     output.put_next_entry(entry.name)
     entry_content = REXML::Document.new(get_entry_content(entry, data_provider))
 
-    if logo_url != nil
+    unless logo_url.nil?
       if entry.name == '[Content_Types].xml'
         entry_content.elements[1].add_element(image_extension('png'))
         entry_content.elements[1].add_element(image_extension('jpg'))
@@ -68,10 +71,7 @@ class DocxTemplater
       end
 
       entry_content.elements[1].add_element(relationship_element(logo_url)) \
-        if entry.name.end_with?('document.xml.rels')
-
-      iterate_searching_for_image_tag(entry_content.elements[1][0].elements) \
-        if entry.name.end_with?('document.xml')
+        if entry.name.end_with?('xml.rels')
     end
 
     output.write entry_content.to_s if entry.ftype != :directory
@@ -87,56 +87,11 @@ class DocxTemplater
 
   def relationship_element(logo_url)
     rel_element = REXML::Element.new('Relationship')
-    rel_element.add_attribute('Id', 'customer_logo')
+    rel_element.add_attribute('Id', 'logo_cliente')
     rel_element.add_attribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image')
     rel_element.add_attribute('Target', logo_url)
     rel_element.add_attribute('TargetMode', 'External')
 
     rel_element
-  end
-
-  def iterate_searching_for_image_tag(elements)
-    elements.each do |element|
-      new_elements = element.elements
-      begin
-        if element.text.to_s.include?('||customer_logo||')
-          parent_elements = element.parent.parent.parent.elements
-          reversed_elements = parent_elements.to_a.reverse
-          reversed_elements << image_element
-
-
-          reversed_elements.reverse.each_with_index do |e, index|
-            parent_elements[index + 1] = e
-          end
-
-          element.parent.delete(element)
-        end
-      rescue StandardError => e
-        pp e.backtrace
-      end
-
-      iterate_searching_for_image_tag(new_elements) unless new_elements.empty?
-    end
-  end
-
-  def image_element
-    wp_element    = REXML::Element.new('w:p')
-    wr_element    = REXML::Element.new('w:r')
-    wpict_element = REXML::Element.new('w:pict')
-
-    vshape_element = REXML::Element.new('v:shape')
-    vshape_element.add_attribute('id', 'customer_logo')
-    vshape_element.add_attribute('type', '#_x0000_t75')
-    vshape_element.add_attribute('style', 'width:100; height:100; border: 10; float: left')
-
-    vimagedata_element = REXML::Element.new('v:imagedata')
-    vimagedata_element.add_attribute('r:id', 'customer_logo')
-
-    vshape_element.add_element(vimagedata_element)
-    wpict_element.add_element(vshape_element)
-    wr_element.add_element(wpict_element)
-    wp_element.add_element(wr_element)
-
-    wp_element
   end
 end
