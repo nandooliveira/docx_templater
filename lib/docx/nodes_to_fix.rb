@@ -48,7 +48,8 @@ module Docx
         elsif key&.include?('logo_cliente')
           # the text before logo image
           first_part = node.value[0..(range.first - 1)]
-          node.parent.parent.parent.add_element(common_element(first_part))
+          node.parent.parent.parent.add_element(common_element(first_part)) \
+            unless first_part.include?('||logo_cliente||')
 
           # image tag
           tags_to_include = %w[body hdr]
@@ -58,16 +59,15 @@ module Docx
           reversed_elements << image_element if tags_to_include.include?(parent.name)
 
           reversed_elements.reverse.each_with_index do |e, index|
-            next if e == node.parent
-
             parent_elements[index + 1] = e
           end
 
           # the text after the logo image
           last_part = node.value.to_s[(range.last + 1)..-1]
-          node.parent.parent.parent.add_element(common_element(last_part))
+          node.parent.parent.parent.add_element(common_element(last_part)) \
+            unless last_part.include?('||logo_cliente||')
 
-          node.parent.parent.delete(node.parent)
+          node.parent.delete(node)
         elsif value&.include?('**')
           tokenized_value = value.split('**')
           tokenized_value.each do |token|
