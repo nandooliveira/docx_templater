@@ -146,7 +146,7 @@ module Docx
       vshape_element = REXML::Element.new('v:shape')
       vshape_element.add_attribute('id', 'logo_cliente')
       vshape_element.add_attribute('type', '#_x0000_t75')
-      vshape_element.add_attribute('style', 'width:70; height:70; border: 10; float: left')
+      vshape_element.add_attribute('style', 'max-height:70; border: 10; float: left; object-fit: contain')
 
       vimagedata_element = REXML::Element.new('v:imagedata')
       vimagedata_element.add_attribute('r:id', 'logo_cliente')
