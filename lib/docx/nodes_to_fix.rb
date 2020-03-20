@@ -110,12 +110,30 @@ module Docx
       wt_element   = REXML::Element.new('w:t')
       wt_element.add_text(content)
 
+      set_font_to('Tahoma', wrpr_element)
       wr_element.add_element(wrpr_element)
       wr_element.add_element(wt_element)
 
       wt_element.add_attribute('xml:space', 'preserve')
 
       wr_element
+    end
+
+    def set_font_to(font, element)
+      wrfonts_element = REXML::Element.new('w:rFonts')
+      wrfonts_element.add_attribute('w:ascii', font)
+      wrfonts_element.add_attribute('w:hAnsi', font)
+      wrfonts_element.add_attribute('w:cs', font)
+      wics_element = REXML::Element.new('w:iCs')
+      wisz_element = REXML::Element.new('w:sz')
+      wiszcs_element = REXML::Element.new('w:szCs')
+      wisz_element.add_attribute('w:val', '22')
+      wiszcs_element.add_attribute('w:val', '22')
+
+      element.add_element(wrfonts_element)
+      element.add_element(wics_element)
+      element.add_element(wisz_element)
+      element.add_element(wiszcs_element)
     end
 
     def bold_element(new_value)
@@ -128,6 +146,7 @@ module Docx
       value = new_value.gsub('\*\*', '')
       wt_element.add_text(value)
 
+      set_font_to('Tahoma', wrpr_element)
       wrpr_element.add_element(wb_element)
       wrpr_element.add_element(wbcs_element)
       wr_element.add_element(wrpr_element)
